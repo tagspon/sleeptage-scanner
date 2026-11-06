@@ -97,8 +97,17 @@ async function startScan() {
 
         await stopScan();
 
-        window.location.href =
-          APP_URL + '?barcode=' + encodeURIComponent(barcode);
+        if (window.opener && !window.opener.closed) {
+  window.opener.postMessage(
+    { type: 'SLEEPTAGE_BARCODE', barcode: barcode },
+    '*'
+  );
+  document.getElementById('status').textContent =
+    '바코드 전달 완료! 직원용 화면으로 돌아가 주세요.';
+} else {
+  document.getElementById('status').textContent =
+    '직원용 SLEEPTAGE 화면에서 카메라 스캔 버튼을 눌러 실행해 주세요.';
+}
       },
       function() {}
     );
