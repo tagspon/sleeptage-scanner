@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SLEEPTAGE STAFF TEST</title>
+<style>body{font-family:Arial,sans-serif;background:#fafaf7;margin:0;color:#20231f}.bar{padding:14px;background:#d9f36a;display:flex;justify-content:space-between;align-items:center;gap:10px}.bar b{letter-spacing:.08em}button{padding:12px;border:0;border-radius:9px;background:#20231f;color:#fff;font-weight:bold}#reader{max-width:480px;margin:10px auto}#camera{display:none;padding:12px;text-align:center}#status{padding:8px}iframe{display:block;width:100%;height:calc(100dvh - 64px);border:0;background:white}.hint{font-size:12px;color:#666}</style></head><body>
+<div class="bar"><b>SLEEPTAGE / PICCLE</b><button id="scan">카메라 스캔</button></div>
+<section id="camera"><div id="status">카메라 준비 중…</div><div id="reader"></div><button id="close">카메라 닫기</button><p class="hint">CODE 128 · 숫자 11자리</p></section>
+<iframe id="staff" title="SLEEPTAGE 직원 관리" allow="camera" src="https://script.google.com/macros/s/AKfycbz62MLi8C68RCkuPLFQ0OPbiuxO8gWugNux44j4wfc6-yfBE2YUHhay--qxQMc4aIdxQA/exec"></iframe>
+<script>
+const box=document.getElementById('camera'),frame=document.getElementById('staff'),status=document.getElementById('status');let scanner=null,busy=false;
+function loadLib(){return new Promise((resolve,reject)=>{if(window.Html5Qrcode)return resolve();const s=document.createElement('script');s.src='https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';s.onload=resolve;s.onerror=()=>reject(Error('스캐너 라이브러리 로딩 실패'));document.head.append(s)})}
+async function stop(){box.style.display='none';frame.style.display='block';const old=scanner;scanner=null;if(old){try{if(old.isScanning)await old.stop()}catch(e){}try{old.clear()}catch(e){}}}
+document.getElementById('close').onclick=stop;
+document.getElementById('scan').onclick=async()=>{busy=false;frame.style.display='none';box.style.display='block';status.textContent='카메라 준비 중…';try{await loadLib();scanner=new Html5Qrcode('reader',{formatsToSupport:[Html5QrcodeSupportedFormats.CODE_128],verbose:false});await scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:280,height:130}},async decoded=>{const code=String(decoded).trim();if(busy||!/^[0-9]{11}$/.test(code))return;busy=true;status.textContent='인식 완료 · 물건 조회 중…';// The existing Apps Script listener trusts messages only from tagspon.github.io.
+frame.contentWindow.postMessage({type:'SLEEPTAGE_BARCODE',barcode:code},'*');await stop();},()=>{});status.textContent='바코드를 비춰 주세요.'}catch(e){status.textContent='카메라 실행 실패: '+(e.message||e)}};
+</script></body></html>
