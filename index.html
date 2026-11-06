@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SLEEPTAGE SCANNER</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 24px 16px;
+      background: #fafaf7;
+      color: #20231f;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    h1 { font-size: 25px; }
+    #reader { max-width: 480px; margin: 20px auto; }
+    button {
+      padding: 15px 22px;
+      background: #d9f36a;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      margin: 6px;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 24px;
+      font-weight: bold;
+      overflow-wrap: anywhere;
+    }
+    #status { margin: 14px 0; }
+  </style>
+</head>
+<body>
+  <h1>SLEEPTAGE / PICCLE</h1>
+  <p>CODE 128 바코드 스캐너</p>
+
+  <button onclick="startScan()">카메라 스캔 시작</button>
+  <button onclick="stopScan()">중지</button>
+
+  <div id="reader"></div>
+  <p id="status">스캔 시작 버튼을 눌러주세요.</p>
+  <div id="result"></div>
+
+  <script>
+    let scanner = null;
+    let running = false;
+
+    async function startScan() {
+      if (running) return;
+
+      const status = document.getElementById('status');
+
+      if (typeof Html5Qrcode === 'undefined') {
+        status.textContent = '스캔 프로그램을 불러오지 못했습니다.';
+        return;
+      }
+
+      try {
+        scanner = new Html5Qrcode('reader', {
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.CODE_128
+          ],
+          verbose: false
+        });
+
+        await scanner.start(
+          { facingMode: 'environment' },
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 120 }
+          },
+          async (decodedText) => {
+            const value = String(decodedText).trim();
+
+            if (!/^\d{11}$/.test(value)) {
+              status.textContent = '11자리 바코드를 비춰주세요.';
+              return;
+            }
+
+            document.getElementById('result').textContent = value;
+            status.textContent = '바코드 인식 성공!';
+            await stopScan();
+          },
+          () => {}
+        );
+
+        running = true;
+        status.textContent = '바코드를 카메라에 비춰주세요.';
+
+      } catch (error) {
+        status.textContent =
+          '카메라 실행 오류: ' + String(error.message || error);
+        scanner = null;
+        running = false;
+      }
+    }
+
+    async function stopScan() {
+      if (!scanner) return;
+      try {
+        if (running) await scanner.stop();
+        scanner.clear();
+      } catch (e) {}
+      scanner = null;
+      running = false;
+    }
+  </script>
+</body>
+</html>
