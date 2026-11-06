@@ -1,0 +1,48 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SLEEPTAGE API TEST</title>
+</head>
+<body>
+  <h2>SLEEPTAGE API 연결 테스트</h2>
+  <button id="test">서버 연결 테스트</button>
+  <pre id="result">버튼을 눌러주세요.</pre>
+
+  <script>
+    const API_URL =
+      'https://script.google.com/macros/s/AKfycbz62MLi8C68RCkuPLFQ0OPbiuxO8gWugNux44j4wfc6-yfBE2YUHhay--qxQMc4aIdxQA/exec';
+
+    document.getElementById('test').onclick = async () => {
+      const result = document.getElementById('result');
+      result.textContent = '연결 확인 중...';
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain'
+          },
+          body: JSON.stringify({
+            action: 'connectionTest'
+          }),
+          redirect: 'follow'
+        });
+
+        const text = await response.text();
+        result.textContent =
+          'HTTP 상태: ' + response.status +
+          '\n\n서버 응답:\n' + text;
+
+      } catch (error) {
+        result.textContent =
+          '브라우저에서 응답을 읽지 못했습니다.\n\n' +
+          error.message +
+          '\n\nCORS 또는 네트워크 제한 가능성이 있습니다.';
+      }
+    };
+  </script>
+</body>
+</html>
